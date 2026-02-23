@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>H5GG Fixed Size Script</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+
+            /* 禁止文本选择 */
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        #container {
+            width: 100%;
+            height: 100%;
+            background: rgba(3, 15, 30, 0.75);
+            border-radius: 10px;
+            box-sizing: border-box;
+            padding: 4px 4px 2px 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+            gap: 2px;
+        }
+
+        .title {
+            color: #E0F8FF;
+            font-size: 11px;
+            font-weight: 600;
+            margin: 2px 0;
+            text-align: center;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+            flex-shrink: 0;
+        }
+
+        .btn {
+            width: 94%;
+            padding: 4px 0;
+            margin: 1px 0;
+            background: rgba(0, 30, 50, 0.5);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            color: #E0F8FF;
+            font-size: 10px;
+            font-weight: 500;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            outline: none;
+            transition: all 0.1s ease;
+            box-shadow: inset 0 1px 2px rgba(0, 255, 255, 0.1);
+            flex-shrink: 0;
+        }
+
+        .btn:hover {
+            background: rgba(0, 80, 120, 0.4);
+            border-color: rgba(0, 255, 255, 0.6);
+            transform: scale(1.01);
+        }
+
+        .btn:active {
+            background: rgba(0, 50, 80, 0.6);
+            transform: scale(0.99);
+        }
+
+        #addressBox {
+            width: 94%;
+            padding: 3px 0;
+            margin: 0;
+            background: rgba(0, 10, 20, 0.6);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            color: #00FFFF;
+            font-size: 10px;
+            text-align: center;
+            border-radius: 4px;
+            min-height: 12px;
+            cursor: pointer;
+            user-select: all;
+            flex-shrink: 0;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div class="title" id="mainTitle">H5GG 控制台</div>
+        <button class="btn" id="btn1">功能一</button>
+        <button class="btn" id="btn2">功能二</button>
+        <button class="btn" id="btn3">功能三</button>
+        <div id="addressBox">点击功能按钮获取地址</div>
+    </div>
+
+    <script>
+        let currentAddress = null; // 当前保存的地址
+
+        /* 禁止文本选择和拖动 */
+        document.body.onselectstart = document.body.ondragstart = function () {
+            return false;
+        };
+
+        /* 更新显示地址 */
+        function updateDisplayedAddress(address) {
+            if (!address) return;
+
+            currentAddress = Number(address).toString(16).toUpperCase();
+
+            document.getElementById('addressBox').innerText =
+                "点击复制地址: 0x" + currentAddress;
+        }
+        
+        function fuckbase(addr, hex) {
+
+    for (var i = 0; i < hex.length / 2; i++) {
+
+        var item = parseInt(hex.substring(i * 2, i * 2 + 2), 16);
+
+        h5gg.setValue(addr + i, item, "U8");
+
+    }
+}
+
+        /* 复制地址（双模式兼容） */
+        function copyAddress() {
+
+            if (!currentAddress) return;
+
+            const fullAddress = "0x" + currentAddress;
+            const display = document.getElementById("addressBox");
+
+            // 优先使用现代API
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+
+                navigator.clipboard.writeText(fullAddress).then(() => {
+
+                    display.innerText = "✅ 已复制: " + fullAddress;
+
+                    setTimeout(() => {
+                        display.innerText = "点击复制地址: " + fullAddress;
+                    }, 1000);
+
+                }).catch(() => {
+                    fallbackCopy(fullAddress);
+                });
+
+            } else {
+                fallbackCopy(fullAddress);
+            }
+        }
+
+        /* 旧版兼容复制 */
+        function fallbackCopy(text) {
+            const textarea = document.createElement("textarea");
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textarea);
+
+            const display = document.getElementById("addressBox");
+            display.innerText = "✅ 已复制: " + text;
+
+            setTimeout(() => {
+                display.innerText = "点击复制地址: " + text;
+            }, 1000);
+        }
+
+        window.onload = function() {
+            const FIXED_WIDTH = 200;
+            const FIXED_HEIGHT = 150;
+
+            setWindowRect(0, 0, FIXED_WIDTH, FIXED_HEIGHT);
+            setWindowDrag(0, 0, FIXED_WIDTH, FIXED_HEIGHT);
+            setWindowTouch(true);
+
+            setLayoutAction(function(screenWidth, screenHeight) {
+                let centerX = (screenWidth - FIXED_WIDTH) / 2;
+                let centerY = (screenHeight - FIXED_HEIGHT) / 2;
+                setWindowRect(centerX, centerY, FIXED_WIDTH, FIXED_HEIGHT);
+                setWindowVisible(true);
+            });
+
+            const addressBox = document.getElementById('addressBox');
+
+            // 点击地址复制
+            addressBox.onclick = function() {
+                copyAddress();
+            };
+
+// ================= 功能一 =================
+document.getElementById('btn1').onclick = function() {
+    try {
+
+        var X = h5gg.getRangesList(0);   // 按模板用0取主基址
+
+        var addr = Number(X[0].start) + 0x192D09C;
+
+        fuckbase(addr, "01198052012000B9");
+
+        updateDisplayedAddress(addr);
+
+    } catch (e) {
+        document.getElementById('addressBox').innerText = "功能一: 错误";
+    }
+};
+            // ================= 功能二 =================
+            document.getElementById('btn2').onclick = function() {
+                try {
+                    h5gg.clearResults();
+                    h5gg.searchNumber('100', 'I32');
+
+                    let count = h5gg.getResultsCount();
+
+                    if (count > 0) {
+                        let results = h5gg.getResults(1, 0);
+                        updateDisplayedAddress(results[0].address);
+                    } else {
+                        addressBox.textContent = '功能二: 未找到';
+                    }
+
+                    h5gg.clearResults();
+
+                } catch (e) {
+                    addressBox.textContent = '功能二: 错误';
+                }
+            };
+
+            // ================= 功能三 =================
+            document.getElementById('btn3').onclick = function() {
+                alert('功能三');
+            };
+        };
+    </script>
+</body>
+</html>
