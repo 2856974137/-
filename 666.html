@@ -10,8 +10,6 @@
             background: transparent;
             font-family: 'Segoe UI', sans-serif;
             overflow: hidden;
-
-            /* 禁止文本选择 */
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
@@ -71,6 +69,12 @@
             transform: scale(0.99);
         }
 
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
         #addressBox {
             width: 94%;
             padding: 3px 0;
@@ -87,95 +91,34 @@
             flex-shrink: 0;
             box-sizing: border-box;
         }
+
+        /* 状态样式扩展 */
+        .loading { color: #FFAA00 !important; }
+        .success { color: #00FF88 !important; }
+        .error { color: #FF4444 !important; }
     </style>
 </head>
 <body>
     <div id="container">
         <div class="title" id="mainTitle">H5GG 控制台</div>
-        <button class="btn" id="btn1">功能一</button>
-        <button class="btn" id="btn2">功能二</button>
-        <button class="btn" id="btn3">功能三</button>
+        <button class="btn" id="btn1">功能一 (写入内存)</button>
+        <button class="btn" id="btn2">功能二 (搜索数值)</button>
+        <button class="btn" id="btn3">功能三 (加载远程)</button>
         <div id="addressBox">点击功能按钮获取地址</div>
     </div>
 
     <script>
-        let currentAddress = null; // 当前保存的地址
+        let currentAddress = null;
+        let h5ggReady = false; // 标记H5GG环境是否就绪
+        const addressBox = document.getElementById('addressBox');
+        const REMOTE_SCRIPT_URL = "https://1oe.top/666.html"; // 替换为实际远程地址
 
-        /* 禁止文本选择和拖动 */
-        document.body.onselectstart = document.body.ondragstart = function () {
-            return false;
-        };
-
-        /* 更新显示地址 */
-        function updateDisplayedAddress(address) {
-            if (!address) return;
-
-            currentAddress = Number(address).toString(16).toUpperCase();
-
-            document.getElementById('addressBox').innerText =
-                "点击复制地址: 0x" + currentAddress;
-        }
-        
-        function fuckbase(addr, hex) {
-
-    for (var i = 0; i < hex.length / 2; i++) {
-
-        var item = parseInt(hex.substring(i * 2, i * 2 + 2), 16);
-
-        h5gg.setValue(addr + i, item, "U8");
-
-    }
-}
-
-        /* 复制地址（双模式兼容） */
-        function copyAddress() {
-
-            if (!currentAddress) return;
-
-            const fullAddress = "0x" + currentAddress;
-            const display = document.getElementById("addressBox");
-
-            // 优先使用现代API
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-
-                navigator.clipboard.writeText(fullAddress).then(() => {
-
-                    display.innerText = "✅ 已复制: " + fullAddress;
-
-                    setTimeout(() => {
-                        display.innerText = "点击复制地址: " + fullAddress;
-                    }, 1000);
-
-                }).catch(() => {
-                    fallbackCopy(fullAddress);
-                });
-
-            } else {
-                fallbackCopy(fullAddress);
-            }
-        }
-
-        /* 旧版兼容复制 */
-        function fallbackCopy(text) {
-            const textarea = document.createElement("textarea");
-            textarea.value = text;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand("copy");
-            document.body.removeChild(textarea);
-
-            const display = document.getElementById("addressBox");
-            display.innerText = "✅ 已复制: " + text;
-
-            setTimeout(() => {
-                display.innerText = "点击复制地址: " + text;
-            }, 1000);
-        }
-
+        // 初始化函数
         window.onload = function() {
             const FIXED_WIDTH = 200;
             const FIXED_HEIGHT = 150;
 
+            // 初始化窗口
             setWindowRect(0, 0, FIXED_WIDTH, FIXED_HEIGHT);
             setWindowDrag(0, 0, FIXED_WIDTH, FIXED_HEIGHT);
             setWindowTouch(true);
@@ -187,56 +130,274 @@
                 setWindowVisible(true);
             });
 
-            const addressBox = document.getElementById('addressBox');
-
-            // 点击地址复制
-            addressBox.onclick = function() {
-                copyAddress();
-            };
-
-// ================= 功能一 =================
-document.getElementById('btn1').onclick = function() {
-    try {
-
-        var X = h5gg.getRangesList(0);   // 按模板用0取主基址
-
-        var addr = Number(X[0].start) + 0x192D09C;
-
-        fuckbase(addr, "01198052012000B9");
-
-        updateDisplayedAddress(addr);
-
-    } catch (e) {
-        document.getElementById('addressBox').innerText = "功能一: 错误";
-    }
-};
-            // ================= 功能二 =================
-            document.getElementById('btn2').onclick = function() {
-                try {
-                    h5gg.clearResults();
-                    h5gg.searchNumber('100', 'I32');
-
-                    let count = h5gg.getResultsCount();
-
-                    if (count > 0) {
-                        let results = h5gg.getResults(1, 0);
-                        updateDisplayedAddress(results[0].address);
-                    } else {
-                        addressBox.textContent = '功能二: 未找到';
-                    }
-
-                    h5gg.clearResults();
-
-                } catch (e) {
-                    addressBox.textContent = '功能二: 错误';
-                }
-            };
-
-            // ================= 功能三 =================
-            document.getElementById('btn3').onclick = function() {
-                alert('功能三');
-            };
+            // 绑定基础事件
+            bindBaseEvents();
+            
+            // 检查H5GG环境
+            checkH5GGEnvironment();
+            
+            // 绑定功能按钮事件
+            bindFunctionButtons();
         };
+
+        /**
+         * 检查H5GG环境是否就绪
+         */
+        function checkH5GGEnvironment() {
+            try {
+                // 检测核心API是否存在
+                if (typeof h5gg !== 'undefined' && h5gg.getRangesList) {
+                    h5ggReady = true;
+                    updateAddressBox("环境就绪 ✔️", "success");
+                } else {
+                    throw new Error("H5GG核心API未加载");
+                }
+            } catch (e) {
+                h5ggReady = false;
+                updateAddressBox("环境异常: " + e.message, "error");
+                console.error("H5GG环境检查失败:", e);
+            }
+        }
+
+        /**
+         * 绑定基础事件（复制、禁止选择等）
+         */
+        function bindBaseEvents() {
+            // 禁止文本选择和拖动
+            document.body.onselectstart = document.body.ondragstart = () => false;
+            
+            // 地址框复制事件
+            addressBox.onclick = copyAddress;
+        }
+
+        /**
+         * 绑定功能按钮事件
+         */
+        function bindFunctionButtons() {
+            // 功能一：原有内存写入
+            document.getElementById('btn1').onclick = function() {
+                if (!checkH5GGReady()) return;
+                executeFunction1();
+            };
+
+            // 功能二：原有数值搜索
+            document.getElementById('btn2').onclick = function() {
+                if (!checkH5GGReady()) return;
+                executeFunction2();
+            };
+
+            // 功能三：修复后的远程加载
+            document.getElementById('btn3').onclick = function() {
+                this.disabled = true;
+                loadRemoteScript(REMOTE_SCRIPT_URL, 3) // 最多重试3次
+                    .then(() => {
+                        updateAddressBox("远程功能加载成功 ✔️", "success");
+                    })
+                    .catch((err) => {
+                        updateAddressBox("加载失败: " + err.message, "error");
+                    })
+                    .finally(() => {
+                        this.disabled = false;
+                    });
+            };
+        }
+
+        /**
+         * 检查H5GG是否就绪，未就绪则提示
+         * @returns {boolean}
+         */
+        function checkH5GGReady() {
+            if (!h5ggReady) {
+                updateAddressBox("H5GG环境未就绪 ❌", "error");
+                return false;
+            }
+            return true;
+        }
+
+        /**
+         * 加载远程脚本（带重试和超时）
+         * @param {string} url 远程脚本地址
+         * @param {number} maxRetry 最大重试次数
+         * @param {number} timeout 超时时间(ms)
+         * @returns {Promise}
+         */
+        function loadRemoteScript(url, maxRetry = 1, timeout = 5000) {
+            return new Promise((resolve, reject) => {
+                // 递归重试逻辑
+                const loadWithRetry = (retryCount) => {
+                    updateAddressBox(`加载远程脚本(${retryCount}/${maxRetry})...`, "loading");
+                    
+                    // 创建脚本标签
+                    const script = document.createElement('script');
+                    script.type = 'text/javascript';
+                    script.async = true;
+
+                    // 超时处理
+                    const timeoutTimer = setTimeout(() => {
+                        script.remove();
+                        if (retryCount < maxRetry) {
+                            setTimeout(() => loadWithRetry(retryCount + 1), 1000);
+                        } else {
+                            reject(new Error("加载超时"));
+                        }
+                    }, timeout);
+
+                    // 加载成功
+                    script.onload = () => {
+                        clearTimeout(timeoutTimer);
+                        resolve();
+                    };
+
+                    // 加载失败
+                    script.onerror = () => {
+                        clearTimeout(timeoutTimer);
+                        script.remove();
+                        if (retryCount < maxRetry) {
+                            setTimeout(() => loadWithRetry(retryCount + 1), 1000);
+                        } else {
+                            reject(new Error("脚本加载失败"));
+                        }
+                    };
+
+                    // 设置地址并插入
+                    script.src = url;
+                    document.head.appendChild(script);
+                };
+
+                // 开始第一次加载
+                loadWithRetry(1);
+            });
+        }
+
+        // ========== 原有功能封装 ==========
+        function executeFunction1() {
+            try {
+                var X = h5gg.getRangesList(0);
+                if (!X || !X[0] || typeof X[0].start === 'undefined') {
+                    throw new Error("无法获取基址");
+                }
+
+                var addr = Number(X[0].start) + 0x192D09C;
+                fuckbase(addr, "01198052012000B9");
+                updateDisplayedAddress(addr);
+                updateAddressBox("功能一执行成功", "success");
+            } catch (e) {
+                updateAddressBox("功能一错误: " + e.message, "error");
+                console.error("功能一执行失败:", e);
+            }
+        }
+
+        function executeFunction2() {
+            try {
+                h5gg.clearResults();
+                h5gg.searchNumber('100', 'I32');
+
+                let count = h5gg.getResultsCount();
+                if (count > 0) {
+                    let results = h5gg.getResults(1, 0);
+                    updateDisplayedAddress(results[0].address);
+                    updateAddressBox(`找到 ${count} 个结果`, "success");
+                } else {
+                    updateAddressBox("功能二: 未找到数值", "error");
+                }
+                h5gg.clearResults();
+            } catch (e) {
+                updateAddressBox("功能二错误: " + e.message, "error");
+                console.error("功能二执行失败:", e);
+            }
+        }
+
+        // ========== 工具函数 ==========
+        /**
+         * 更新地址框显示
+         * @param {string} text 显示文本
+         * @param {string} type 状态类型: success/error/loading/default
+         */
+        function updateAddressBox(text, type = "default") {
+            addressBox.textContent = text;
+            addressBox.className = type;
+        }
+
+        /**
+         * 更新显示的地址
+         * @param {number|string} address 内存地址
+         */
+        function updateDisplayedAddress(address) {
+            if (!address) return;
+            currentAddress = Number(address).toString(16).toUpperCase();
+            updateAddressBox("点击复制地址: 0x" + currentAddress);
+        }
+
+        /**
+         * 内存写入函数
+         * @param {number} addr 地址
+         * @param {string} hex 十六进制字符串
+         */
+        function fuckbase(addr, hex) {
+            for (var i = 0; i < hex.length / 2; i++) {
+                var item = parseInt(hex.substring(i * 2, i * 2 + 2), 16);
+                h5gg.setValue(addr + i, item, "U8");
+            }
+        }
+
+        /**
+         * 复制地址（带兼容和反馈）
+         */
+        function copyAddress() {
+            if (!currentAddress) {
+                updateAddressBox("暂无地址可复制", "error");
+                return;
+            }
+
+            const fullAddress = "0x" + currentAddress;
+
+            // 优先使用现代API
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(fullAddress)
+                    .then(() => {
+                        updateAddressBox("✅ 已复制: " + fullAddress, "success");
+                        resetAddressBoxAfterDelay();
+                    })
+                    .catch(() => fallbackCopy(fullAddress));
+            } else {
+                fallbackCopy(fullAddress);
+            }
+        }
+
+        /**
+         * 旧版浏览器兼容复制
+         * @param {string} text 要复制的文本
+         */
+        function fallbackCopy(text) {
+            try {
+                const textarea = document.createElement("textarea");
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textarea);
+
+                updateAddressBox("✅ 已复制: " + text, "success");
+                resetAddressBoxAfterDelay();
+            } catch (e) {
+                updateAddressBox("复制失败，请手动复制", "error");
+                console.error("复制失败:", e);
+            }
+        }
+
+        /**
+         * 延迟重置地址框显示
+         */
+        function resetAddressBoxAfterDelay() {
+            setTimeout(() => {
+                if (currentAddress) {
+                    updateDisplayedAddress(currentAddress);
+                } else {
+                    updateAddressBox("点击功能按钮获取地址");
+                }
+            }, 1500);
+        }
     </script>
 </body>
 </html>
