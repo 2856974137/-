@@ -2,96 +2,246 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>H5GG Fixed Size Script</title>
+    <title>H5GG 橘子整合脚本</title>
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
-            background: transparent;
-            font-family: 'Segoe UI', sans-serif;
-            overflow: hidden;
+            box-sizing: border-box;
+        }
 
-            /* 禁止文本选择 */
+        body {
+            background: transparent;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            overflow: hidden;
             -webkit-touch-callout: none;
             -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
             user-select: none;
         }
 
         #container {
             width: 100%;
             height: 100%;
-            background: rgba(3, 15, 30, 0.75);
+            background: rgba(135, 206, 250, 0.12);
             border-radius: 10px;
-            box-sizing: border-box;
-            padding: 4px 4px 2px 4px;
+            padding: 6px 6px 4px 6px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            border: 1px solid rgba(0, 255, 255, 0.2);
-            backdrop-filter: blur(4px);
-            gap: 2px;
+            border: 1px solid rgba(135, 206, 250, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            gap: 3px;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(135, 206, 250, 0.15);
+        }
+
+        .settings-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: rgba(135, 206, 250, 0.15);
+            border: 1px solid rgba(135, 206, 250, 0.5);
+            color: #87CEFA;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+
+        .settings-btn:hover {
+            background: rgba(135, 206, 250, 0.3);
+            border-color: rgba(135, 206, 250, 0.8);
+            transform: scale(1.1);
+        }
+
+        .settings-panel {
+            position: absolute;
+            top: 26px;
+            right: 5px;
+            width: 160px;
+            background: rgba(135, 206, 250, 0.15);
+            border-radius: 8px;
+            border: 1px solid rgba(135, 206, 250, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 8px;
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(135, 206, 250, 0.12);
+            z-index: 9;
+        }
+
+        .settings-panel.show {
+            display: flex;
+        }
+
+        .settings-title {
+            color: #E0F7FF;
+            font-size: 9px;
+            font-weight: 600;
+            text-align: center;
+            padding-bottom: 3px;
+            border-bottom: 1px solid rgba(135, 206, 250, 0.25);
+        }
+
+        .game-switch-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+        }
+
+        .game-name {
+            color: #E0F7FF;
+            font-size: 8px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 28px;
+            height: 14px;
+            border-radius: 7px;
+            background: rgba(135, 206, 250, 0.1);
+            border: 1px solid rgba(135, 206, 250, 0.3);
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 1px;
+            left: 1px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #B0E2FF;
+            transition: left 0.2s ease;
+        }
+
+        .toggle-switch.active {
+            background: rgba(135, 206, 250, 0.4);
+            border-color: rgba(135, 206, 250, 0.8);
+        }
+
+        .toggle-switch.active::after {
+            left: 15px;
+            background: #87CEFA;
         }
 
         .title {
-            color: #E0F8FF;
+            color: #E0F7FF;
             font-size: 11px;
             font-weight: 600;
             margin: 2px 0;
             text-align: center;
-            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+            text-shadow: 0 0 5px rgba(135, 206, 250, 0.7);
             flex-shrink: 0;
         }
 
         .btn {
-            width: 94%;
+            width: 92%;
             padding: 4px 0;
             margin: 1px 0;
-            background: rgba(0, 30, 50, 0.5);
-            border: 1px solid rgba(0, 255, 255, 0.3);
-            color: #E0F8FF;
-            font-size: 10px;
+            background: rgba(135, 206, 250, 0.1);
+            border: 1px solid rgba(135, 206, 250, 0.3);
+            color: #E0F7FF;
+            font-size: 9px;
             font-weight: 500;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
             text-align: center;
             outline: none;
-            transition: all 0.1s ease;
-            box-shadow: inset 0 1px 2px rgba(0, 255, 255, 0.1);
+            transition: all 0.2s ease;
+            box-shadow: inset 0 1px 2px rgba(135, 206, 250, 0.08);
             flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(135, 206, 250, 0.12), transparent);
+            transition: left 0.5s ease;
         }
 
         .btn:hover {
-            background: rgba(0, 80, 120, 0.4);
-            border-color: rgba(0, 255, 255, 0.6);
-            transform: scale(1.01);
+            background: rgba(135, 206, 250, 0.25);
+            border-color: rgba(135, 206, 250, 0.6);
+            transform: scale(1.015);
+            box-shadow: 0 2px 6px rgba(135, 206, 250, 0.15);
+        }
+
+        .btn:hover::before {
+            left: 100%;
         }
 
         .btn:active {
-            background: rgba(0, 50, 80, 0.6);
-            transform: scale(0.99);
+            background: rgba(135, 206, 250, 0.35);
+            transform: scale(0.98);
+            box-shadow: inset 0 1px 3px rgba(135, 206, 250, 0.12);
         }
 
         #addressBox {
-            width: 94%;
-            padding: 3px 0;
-            margin: 0;
-            background: rgba(0, 10, 20, 0.6);
-            border: 1px solid rgba(0, 255, 255, 0.3);
-            color: #00FFFF;
-            font-size: 10px;
+            width: 92%;
+            padding: 4px 0;
+            margin: 3px 0 0 0;
+            background: rgba(135, 206, 250, 0.08);
+            border: 1px solid rgba(135, 206, 250, 0.3);
+            color: #87CEFA;
+            font-size: 9px;
             text-align: center;
-            border-radius: 4px;
-            min-height: 12px;
+            border-radius: 5px;
+            min-height: 14px;
             cursor: pointer;
             user-select: all;
             flex-shrink: 0;
-            box-sizing: border-box;
+            box-shadow: inset 0 1px 2px rgba(135, 206, 250, 0.08);
+            transition: all 0.2s ease;
+        }
+
+        #addressBox:hover {
+            border-color: rgba(135, 206, 250, 0.6);
+            background: rgba(135, 206, 250, 0.12);
         }
     </style>
 </head>
 <body>
     <div id="container">
-        <div class="title" id="mainTitle">H5GG 控制台</div>
+        <div class="settings-btn" id="settingsBtn">⚙️</div>
+        
+        <div class="settings-panel" id="settingsPanel">
+            <div class="settings-title">选择游戏</div>
+            <div class="game-switch-item">
+                <span class="game-name">腾讯桌球</span>
+                <div class="toggle-switch" data-game="gameA"></div>
+            </div>
+            <div class="game-switch-item">
+                <span class="game-name">游戏B</span>
+                <div class="toggle-switch" data-game="gameB"></div>
+            </div>
+            <div class="game-switch-item">
+                <span class="game-name">游戏C</span>
+                <div class="toggle-switch" data-game="gameC"></div>
+            </div>
+        </div>
+
+        <div class="title" id="mainTitle">橘子整合脚本</div>
         <button class="btn" id="btn1">功能一</button>
         <button class="btn" id="btn2">功能二</button>
         <button class="btn" id="btn3">功能三</button>
@@ -99,81 +249,191 @@
     </div>
 
     <script>
-        let currentAddress = null; // 当前保存的地址
-
-        /* 禁止文本选择和拖动 */
-        document.body.onselectstart = document.body.ondragstart = function () {
-            return false;
-        };
-
-        /* 更新显示地址 */
-        function updateDisplayedAddress(address) {
-            if (!address) return;
-
-            currentAddress = Number(address).toString(16).toUpperCase();
-
-            document.getElementById('addressBox').innerText =
-                "点击复制地址: 0x" + currentAddress;
-        }
+        // 全局变量
+        let currentAddress = null;
+        let currentGame = null;
         
-        function fuckbase(addr, hex) {
+        // 延长线专用变量
+        let valueHackActive = false;
+        let hackIntervalId = null;
+        let targetResults = [];
+        let lockedAddresses = [];
 
-    for (var i = 0; i < hex.length / 2; i++) {
-
-        var item = parseInt(hex.substring(i * 2, i * 2 + 2), 16);
-
-        h5gg.setValue(addr + i, item, "U8");
-
-    }
-}
-
-        /* 复制地址（双模式兼容） */
+        // ========== 工具函数 ==========
         function copyAddress() {
-
             if (!currentAddress) return;
-
-            const fullAddress = "0x" + currentAddress;
+            const fullAddress = `0x${currentAddress}`;
             const display = document.getElementById("addressBox");
 
-            // 优先使用现代API
             if (navigator.clipboard && navigator.clipboard.writeText) {
-
-                navigator.clipboard.writeText(fullAddress).then(() => {
-
-                    display.innerText = "✅ 已复制: " + fullAddress;
-
-                    setTimeout(() => {
-                        display.innerText = "点击复制地址: " + fullAddress;
-                    }, 1000);
-
-                }).catch(() => {
-                    fallbackCopy(fullAddress);
-                });
-
+                navigator.clipboard.writeText(fullAddress)
+                    .then(() => showTempMessage(display, `✅ 已复制: ${fullAddress}`))
+                    .catch(() => fallbackCopy(fullAddress, display));
             } else {
-                fallbackCopy(fullAddress);
+                fallbackCopy(fullAddress, display);
             }
         }
 
-        /* 旧版兼容复制 */
-        function fallbackCopy(text) {
+        function fallbackCopy(text, display) {
             const textarea = document.createElement("textarea");
             textarea.value = text;
             document.body.appendChild(textarea);
             textarea.select();
             document.execCommand("copy");
             document.body.removeChild(textarea);
-
-            const display = document.getElementById("addressBox");
-            display.innerText = "✅ 已复制: " + text;
-
-            setTimeout(() => {
-                display.innerText = "点击复制地址: " + text;
-            }, 1000);
+            showTempMessage(display, `✅ 已复制: ${text}`);
         }
 
+        function showTempMessage(el, msg, duration = 1000) {
+            const originalText = el.innerText;
+            el.innerText = msg;
+            setTimeout(() => el.innerText = originalText, duration);
+        }
+
+        // ========== 封装：超级延长线核心逻辑 ==========
+        function runExtendLine() {
+            try {
+                if (valueHackActive) {
+                    clearInterval(hackIntervalId);
+                    hackIntervalId = null;
+                    h5gg.clearResults(); 
+                    lockedAddresses = [];
+                    targetResults = [];
+                    valueHackActive = false;
+                    document.getElementById('addressBox').innerText = "✅ 已关闭延长线";
+                    return;
+                }
+
+                h5gg.clearResults(); 
+                targetResults = [];
+                lockedAddresses = [];
+
+                h5gg.searchNumber('3233808384', 'I64', '0x100000000', '0x200000000');
+                h5gg.searchNearby('64', 'I32', '0x20');
+
+                const allResults = h5gg.getResults(h5gg.getResultsCount());
+                targetResults = allResults.filter(item => item.value === '64');
+
+                if (targetResults.length === 0) {
+                    document.getElementById('addressBox').innerText = "❌ 未找到目标";
+                    h5gg.clearResults();
+                    return;
+                }
+
+                hackIntervalId = setInterval(() => {
+                    targetResults.forEach(result => {
+                        const targetAddr = Number(result.address) + 92;
+                        const fullAddr = '0x' + targetAddr.toString(16).toUpperCase();
+                        h5gg.setValue(fullAddr, 9999, 'F32');
+                        
+                        if (!lockedAddresses.includes(fullAddr)) {
+                            lockedAddresses.push(fullAddr);
+                            currentAddress = targetAddr.toString(16).toUpperCase();
+                        }
+                    });
+                }, 1);
+
+                valueHackActive = true;
+                document.getElementById('addressBox').innerText = `✅ 已锁定 ${targetResults.length} 个地址`;
+
+            } catch (e) {
+                document.getElementById('addressBox').innerText = "❌ 脚本错误";
+            }
+        }
+
+        // ========== 游戏选择与按钮配置 ==========
+        function initGameSwitches() {
+            const switches = document.querySelectorAll('.toggle-switch');
+            switches.forEach(switchEl => {
+                switchEl.addEventListener('click', function() {
+                    const gameKey = this.dataset.game;
+                    
+                    switches.forEach(s => s.classList.remove('active'));
+                    
+                    if (currentGame === gameKey) {
+                        currentGame = null;
+                        resetBtnText();
+                        document.getElementById('addressBox').innerText = "已取消游戏选择";
+                        return;
+                    }
+                    
+                    this.classList.add('active');
+                    currentGame = gameKey;
+                    updateBtnConfig(gameKey);
+                    document.getElementById('addressBox').innerText = `✅ 已选择: ${getGameName(gameKey)}`;
+                });
+            });
+        }
+
+        function getGameName(key) {
+            const names = { gameA: "腾讯桌球", gameB: "游戏B", gameC: "游戏C" };
+            return names[key] || "未知游戏";
+        }
+
+        function resetBtnText() {
+            document.getElementById('btn1').innerText = "功能一";
+            document.getElementById('btn2').innerText = "功能二";
+            document.getElementById('btn3').innerText = "功能三";
+            
+            document.getElementById('btn1').onclick = () => document.getElementById('addressBox').innerText = "请先选择游戏";
+            document.getElementById('btn2').onclick = () => document.getElementById('addressBox').innerText = "请先选择游戏";
+            document.getElementById('btn3').onclick = () => document.getElementById('addressBox').innerText = "请先选择游戏";
+        }
+
+        function updateBtnConfig(gameKey) {
+            const btn1 = document.getElementById('btn1');
+            const btn2 = document.getElementById('btn2');
+            const btn3 = document.getElementById('btn3');
+
+            if (gameKey === 'gameA') {
+                btn1.innerText = "↓一关一开↓";
+                btn2.innerText = "超级延长线";
+                btn3.innerText = "↑再次点击关闭↑";
+
+                btn1.onclick = () => document.getElementById('addressBox').innerText = "该功能未启用";
+                btn2.onclick = runExtendLine; // 整洁调用封装好的函数
+                btn3.onclick = () => document.getElementById('addressBox').innerText = "该功能未启用";
+
+            } else if (gameKey === 'gameB') {
+                btn1.innerText = "游戏B-功能一";
+                btn2.innerText = "游戏B-功能二";
+                btn3.innerText = "游戏B-功能三";
+
+                btn1.onclick = () => document.getElementById('addressBox').innerText = "该功能未启用";
+                btn2.onclick = () => document.getElementById('addressBox').innerText = "该功能未启用";
+                btn3.onclick = () => document.getElementById('addressBox').innerText = "该功能未启用";
+
+            } else if (gameKey === 'gameC') {
+                btn1.innerText = "游戏C-功能一";
+                btn2.innerText = "游戏C-功能二";
+                btn3.innerText = "游戏C-功能三";
+
+                btn1.onclick = () => document.getElementById('addressBox').innerText = "该功能未启用";
+                btn2.onclick = () => document.getElementById('addressBox').innerText = "该功能未启用";
+                btn3.onclick = () => document.getElementById('addressBox').innerText = "该功能未启用";
+            }
+        }
+
+        // ========== 设置面板交互 ==========
+        function initSettingsPanel() {
+            const settingsBtn = document.getElementById('settingsBtn');
+            const settingsPanel = document.getElementById('settingsPanel');
+            
+            settingsBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                settingsPanel.classList.toggle('show');
+            });
+            
+            document.addEventListener('click', function(e) {
+                if (!settingsPanel.contains(e.target) && e.target !== settingsBtn) {
+                    settingsPanel.classList.remove('show');
+                }
+            });
+        }
+
+        // ========== 页面初始化 ==========
         window.onload = function() {
-            const FIXED_WIDTH = 200;
+            const FIXED_WIDTH = 180;
             const FIXED_HEIGHT = 150;
 
             setWindowRect(0, 0, FIXED_WIDTH, FIXED_HEIGHT);
@@ -181,61 +441,18 @@
             setWindowTouch(true);
 
             setLayoutAction(function(screenWidth, screenHeight) {
-                let centerX = (screenWidth - FIXED_WIDTH) / 2;
-                let centerY = (screenHeight - FIXED_HEIGHT) / 2;
+                const centerX = (screenWidth - FIXED_WIDTH) / 2;
+                const centerY = (screenHeight - FIXED_HEIGHT) / 2;
                 setWindowRect(centerX, centerY, FIXED_WIDTH, FIXED_HEIGHT);
                 setWindowVisible(true);
             });
 
-            const addressBox = document.getElementById('addressBox');
+            document.body.onselectstart = document.body.ondragstart = () => false;
+            document.getElementById('addressBox').onclick = copyAddress;
 
-            // 点击地址复制
-            addressBox.onclick = function() {
-                copyAddress();
-            };
-
-// ================= 功能一 =================
-document.getElementById('btn1').onclick = function() {
-    try {
-
-        var X = h5gg.getRangesList(0);   // 按模板用0取主基址
-
-        var addr = Number(X[0].start) + 0x192D09C;
-
-        fuckbase(addr, "01198052012000B9");
-
-        updateDisplayedAddress(addr);
-
-    } catch (e) {
-        document.getElementById('addressBox').innerText = "功能一: 错误";
-    }
-};
-            // ================= 功能二 =================
-            document.getElementById('btn2').onclick = function() {
-                try {
-                    h5gg.clearResults();
-                    h5gg.searchNumber('100', 'I32');
-
-                    let count = h5gg.getResultsCount();
-
-                    if (count > 0) {
-                        let results = h5gg.getResults(1, 0);
-                        updateDisplayedAddress(results[0].address);
-                    } else {
-                        addressBox.textContent = '功能二: 未找到';
-                    }
-
-                    h5gg.clearResults();
-
-                } catch (e) {
-                    addressBox.textContent = '功能二: 错误';
-                }
-            };
-
-            // ================= 功能三 =================
-            document.getElementById('btn3').onclick = function() {
-                alert('功能三');
-            };
+            initGameSwitches();
+            initSettingsPanel();
+            resetBtnText();
         };
     </script>
 </body>
